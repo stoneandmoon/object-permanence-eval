@@ -1,0 +1,20 @@
+name: object-permanence-curves
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - numpy
+      - pandas
+      - scipy
+      - pillow
+      - pyyaml
+      - tqdm
+      - matplotlib
+      - opencv-python
+      - einops
+# Install SEA-RAFT in its dedicated environment; do not merge it here.

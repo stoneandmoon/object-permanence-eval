@@ -1,0 +1,22 @@
+# No path is hard-coded. Evidence is produced externally by the tracking/evidence pipeline.
+models:
+  roboengine:
+    repo_path: null
+    object_model: YxZhang/evf-sam2-multitask
+  xmem:
+    repo_path: null
+    checkpoint: null
+  dinov2:
+    enabled: false # optional identity evidence; not used by the released curve formula
+    checkpoint: null
+  sea_raft:
+    enabled: true
+    repo_path: null
+    checkpoint: null
+  depth:
+    enabled: true
+    repo_path: null
+    checkpoint: null
+curves:
+  group_aggregation: mean_available_instance_evidence
+  tracking_failure_policy: unavailable_nan

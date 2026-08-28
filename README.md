@@ -63,6 +63,20 @@ export HF_HOME=/path/to/large_disk/huggingface
 
 NVIDIA Cosmos-Predict2.5 supports Text2World, Image2World, and Video2World. For robot experiments, prefer a real image with Image2World or a real short video with Video2World to preserve scene layout, robot appearance, and object identity. Pure Text2World is supplementary.
 
+## Object Permanence Curves
+
+The tracking/evidence pipeline outputs three core temporal curves: Object Existence (current target evidence), Shape Normality (normalized shape-consistency/deformation evidence), and Motion Smoothness (temporal motion continuity). See [curve generation](docs/CURVE_GENERATION.md) for the exact current evidence contract and formulas.
+
+## Curve Generation
+
+```bash
+python scripts/generate_three_curves.py \
+  --evidence-csv /path/to/per_instance_frame_evidence.csv \
+  --output ./outputs/demo_curves
+```
+
+The script also accepts `--tracking-dir /path/to/tracking_results`, which resolves `evidence/per_instance_frame_evidence.csv`. It does not rerun tracking or any model. Model roles and isolated runtimes are documented in [model selection](docs/MODEL_SELECTION.md) and [environments](docs/ENVIRONMENTS.md).
+
 ## Repository scope
 
 No raw datasets, videos, outputs, caches, checkpoints, or model weights are versioned. See [third-party notices](THIRD_PARTY.md) and [license notes](LICENSE_NOTES.md).

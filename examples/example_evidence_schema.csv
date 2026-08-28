@@ -1,0 +1,5 @@
+frame_idx,timestamp,instance_id,mask_exists,tracking_confidence,identity_similarity,depth_valid_ratio,mask_area,aspect_ratio,compactness,previous_mask_iou,shape_observable,motion_observable,centroid_acceleration,trajectory_residual,local_motion_after_camera_compensation,tracking_quality_flag
+0,0.0,cup_01,True,0.98,0.98,1.0,1200,1.0,0.80,1.0,True,True,0.0,0.0,0.0,OK
+1,0.033,cup_01,True,0.95,0.97,1.0,1180,1.02,0.79,0.92,True,True,0.4,0.2,0.1,OK
+2,0.067,cup_01,True,0.92,0.96,1.0,1150,1.03,0.78,0.88,True,True,0.6,0.3,0.2,OK
+3,0.100,cup_01,False,0.25,0.0,0.0,0,0.0,0.0,0.0,False,False,0.0,0.0,0.0,EMPTY_XMEM_OUTPUT
