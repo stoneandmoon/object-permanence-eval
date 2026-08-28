@@ -63,14 +63,6 @@ export HF_HOME=/path/to/large_disk/huggingface
 
 NVIDIA Cosmos-Predict2.5 supports Text2World, Image2World, and Video2World. For robot experiments, prefer a real image with Image2World or a real short video with Video2World to preserve scene layout, robot appearance, and object identity. Pure Text2World is supplementary.
 
-## Experimental results
-
-RoboSet simple real batch: 10/10 RoboEngine initialization success; 10/10 XMem target-identity tracking success; 4 GOOD, 6 MINOR_DRIFT, 0 FAIL. The main issue was gripper-edge contamination.
-
-Diverse real-object batch: 10 targets and 10 tasks; RoboEngine initialization 8/10; 2 GOOD, 3 MINOR_ISSUE, 5 FAIL; gripper contamination 6/10; experimental clean improvement 0/10.
-
-Current limitations include incorrect initialization in difficult scenes, XMem drift after interaction, gripper contamination during grasp, and experimental cleaning that does not yet consistently improve results.
-
 ## Repository scope
 
 No raw datasets, videos, outputs, caches, checkpoints, or model weights are versioned. See [third-party notices](THIRD_PARTY.md) and [license notes](LICENSE_NOTES.md).
