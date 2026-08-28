@@ -1,0 +1,16 @@
+tracking:
+  device: cuda:0
+  xmem_repository: null
+  xmem_checkpoint: null # e.g. /path/to/Track-Anything/checkpoints/XMem-s012.pth
+  save_raw_masks: true
+
+gripper_clean:
+  enabled: false
+  contamination_threshold: 0.15
+  min_retained_raw_ratio: 0.45
+  erosion_short_le_240: 2
+  erosion_short_241_480: 3
+  erosion_short_gt_480: 4
+  iou_weight: 0.50
+  spatial_weight: 0.30
+  area_weight: 0.20

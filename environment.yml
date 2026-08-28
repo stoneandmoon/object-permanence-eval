@@ -1,0 +1,13 @@
+name: object-permanence-tracking
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10.20
+  - pip
+  - pip:
+      - -r requirements.txt
+# Validated tracking stack: Ubuntu 22.04, PyTorch 2.5.1+cu124, CUDA 12.4.
+# Install RoboEngine and XMem separately; do not install Cosmos here.

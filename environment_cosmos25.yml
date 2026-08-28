@@ -1,0 +1,9 @@
+# Deliberately separate from environment.yml.
+# Create/install this environment exactly as specified by the current upstream
+# NVIDIA Cosmos-Predict2.5 setup guide; its CUDA/PyTorch pins may change.
+name: cosmos-predict25
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip

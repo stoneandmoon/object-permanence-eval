@@ -1,0 +1,8 @@
+# Main tracking environment only. Install RoboEngine and XMem separately as
+# described in docs/MODEL_SETUP.md; Cosmos-Predict2.5 has its own environment.
+numpy>=1.26,<3
+opencv-python>=4.8
+PyYAML>=6.0
+torch==2.5.1+cu124
+torchvision==0.20.1+cu124
+spacy>=3.7

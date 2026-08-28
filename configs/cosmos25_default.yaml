@@ -1,0 +1,15 @@
+# Input JSON fields and CLI flags match NVIDIA Cosmos-Predict2.5 examples/inference.py.
+model:
+  model_id: nvidia/Cosmos-Predict2.5-2B
+  variant: 2B/post-trained
+
+generation:
+  inference_type: image2world
+  seed: 1
+input:
+  source: null
+  prompt: null
+output:
+  directory: ./outputs/cosmos25
+memory:
+  note: Configure offloading only through the selected official Cosmos inference backend.
