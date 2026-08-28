@@ -1,193 +1,481 @@
-# Object Permanence Dataset Collection and Annotation Guidelines V1.0
-
-本文定义 Object Permanence 数据集的采集与标注准则。主要术语保留英文；规则用于指导 Human Annotation，不改变现有算法代码。
+# 物体恒常性项目数据采集与标注准则 V1.0
 
 ## 1. 数据用途
 
-数据用于训练 VLM：根据视频及 SAM3、XMem、DINOv2、Depth、SEA-RAFT 等模型提取的逐帧 evidence，判断任务相关物体在操作过程中的真实物理状态，并输出三条连续曲线：
+本项目的数据用于训练 VLM，根据视频及 SAM3、XMem、DINOv2、Depth、SEA-RAFT 等模型提取的逐帧 evidence，判断任务相关物体在整个操作过程中的物理状态，并输出三条连续曲线：
 
 - **Object Existence**：物体是否持续、合理地存在；
 - **Shape Normality**：物体自身形状是否保持合理；
 - **Motion Smoothness**：物体运动是否连续、合理并符合物理过程。
 
-数据不是简单的 Normal / Abnormal 二分类；还必须标记异常发生时间、异常类型、异常严重程度与恢复时间。
+数据不是简单的 Normal / Abnormal 二分类，还需要标出：
 
-## 2. 数据集规模与来源
+- 异常发生在什么时间；
+- 属于什么异常；
+- 异常严重程度；
+- 何时恢复。
 
-正式目标为 600 videos：Normal 300、Abnormal 300、Total 600。现有项目视频仅用于内部规则验证、pipeline 调试与标注示例；新采集数据应尽量避免与已有视频重复。
+---
 
-优先级为真实机器人视频 / 公开真实机器人数据，高于世界模型生成视频；至少 60% 数据必须来自真实视频。世界模型生成视频用于补充真实数据中难以获得的异常：`ABNORMAL_DISAPPEARANCE`、`UNREASONABLE_REAPPEARANCE`、`IDENTITY_CHANGED`、`ABNORMAL_DEFORMATION`、`MOTION_JUMP`、`MOTION_FREEZE`、`MOTION_DISCONTINUITY`。
+## 2. 视频数量
 
-禁止通过剪辑、删除帧、P 图、人工替换物体等简单后处理制造异常。异常必须来自真实机器人执行失败，或世界模型自然生成的物理异常。
+正式数据集目标为 **600 条视频**。
 
-## 3. NVIDIA Cosmos-Predict2.5 的作用
+| 数据类型数量 | |
+| -------- | ------- |
+| Normal | 300 |
+| Abnormal | 300 |
+| **总计** | **600** |
 
-统一使用 **NVIDIA Cosmos-Predict2.5**。它只用于 synthetic / abnormal robot-video generation，不是 target segmentation model，也不是 three-curve prediction model。
+现有项目中的视频可作为内部规则验证和标注示例，新采集数据尽量不要与现有视频重复。
 
-```text
-Real Robot Data + Cosmos-Predict2.5 Generated Data
-                         ↓
-                  Human Annotation
-                         ↓
-                 Evidence Extraction
-                         ↓
-                    VLM Training
-```
+### 数据来源
 
-Cosmos-Predict2.5 生成的视频必须人工筛选；仅选择真正出现目标异常的视频作为 Abnormal 数据。prompt 声称发生异常不能自动成为 Ground Truth。
+优先级：
 
-## 4. Task difficulty
+**真实机器人视频 / 公开真实机器人数据 > 世界模型生成视频**
 
-Task difficulty 只表示 robot task complexity，不直接计入 background complexity、image quality 或 occlusion severity。
+建议至少 **60% 为真实视频**。
 
-| Level | Count | Definition | Examples |
-|---|---:|---|---|
-| T1 Simple | 180 | single-object, single-stage manipulation | pick up a cup; move a bottle; move a box left to right; simple push/pick/place |
-| T2 Medium | 240 | 2–3 manipulation stages，或一个重要 interaction object | grasp → move → place; put/remove object into/from container; robot-arm occlusion; target interacts with another important object |
-| T3 Complex | 180 | multi-object, multi-stage, complex physical relationships | open/close lid; insert/remove; open/close drawer; sequential multi-object manipulation; multiple object states jointly determine validity |
+世界模型生成视频主要用于补充真实数据中较难大量获得的异常，例如：
 
-## 5. 视频采集要求
+- 物体突然消失；
+- 物体不合理重新出现；
+- 物体被替换；
+- 物体异常变形；
+- 物体瞬移；
+- 物体运动突然冻结或轨迹断裂。
 
-每个视频为一个完整 robot manipulation episode，包含 **Before Action → Manipulation → Stable End State**。
+**禁止通过剪辑、P 图、删除帧等方式人工制造异常。**
 
-| Item | Requirement |
-|---|---|
-| Duration | 5–30 s；preferred 8–20 s |
-| FPS | >= 15 |
-| Resolution | >= 640x480；recommended 720p or higher |
-| Target visibility | 目标必须至少在某个阶段清晰可识别 |
+异常应来自真实机器人执行失败，或世界模型自身生成的视频异常。
 
-不允许 severe compression、entire-video blur、severe frame dropping、only cropped target、text overlay、watermark，或 detector bounding box 覆盖在 raw video 上。原始视频必须永久保留，且不得覆盖原始数据。
+---
 
-## 6. Abnormal event types
+## 3. 视频任务难度
 
-| Event Type | Definition |
-|---|---|
+任务难度只表示**机器人任务本身的复杂度**，不将背景复杂、画质差、遮挡严重等视觉因素计入任务难度。
+
+建议比例：
+
+| 难度数量定义 | | |
+| ------ | --- | -------------------- |
+| T1 简单 | 180 | 单物体、单阶段操作 |
+| T2 中等 | 240 | 两到三个操作阶段，或涉及一个关键交互物体 |
+| T3 复杂 | 180 | 多物体、多阶段或复杂物理关系 |
+
+### T1 简单任务
+
+例如：
+
+- 抓起杯子；
+- 移动瓶子；
+- 把盒子从左侧移动到右侧；
+- 简单 Push / Pick / Place。
+
+### T2 中等任务
+
+例如：
+
+- 抓取后搬运再放置；
+- 将物体放入容器；
+- 从容器中取出物体；
+- 操作过程中存在明显机械臂遮挡；
+- 一个任务物体与另一个物体发生关键接触。
+
+### T3 复杂任务
+
+例如：
+
+- 开盖 / 盖合；
+- 插入 / 拔出；
+- 开抽屉 / 关抽屉；
+- 多物体连续操作；
+- 多阶段操作；
+- 一个任务中多个物体状态共同决定任务是否合理。
+
+---
+
+## 4. 视频采集要求
+
+每条视频只包含**一个完整机器人任务 episode**。
+
+视频应完整包含：
+
+**操作开始前 → 操作过程 → 操作结束并稳定**
+
+推荐要求：
+
+- 时长：**5–30 秒，优先 8–20 秒**；
+- FPS：**≥15 FPS**；
+- 分辨率：**≥640×480，推荐 720p 或以上**；
+- 目标物体在视频某个阶段必须能够被明确识别；
+- 不允许严重压缩、整段模糊或大量掉帧；
+- 尽量保留原始完整画面；
+- 不要只裁出目标物体；
+- 不在原始视频中添加文字、水印、检测框等。
+
+**原始视频必须永久保留，不允许覆盖。**
+
+---
+
+## 5. 异常视频要求
+
+Abnormal 数据重点覆盖以下异常：
+
+| 类型定义 | |
+| --------------------------- | ----------------- |
 | `ABNORMAL_DISAPPEARANCE` | 本应继续存在的物体突然消失 |
 | `UNREASONABLE_REAPPEARANCE` | 物体以不符合前后状态的方式重新出现 |
-| `IDENTITY_CHANGED` | 原物体变成另一个物体或身份切换 |
+| `IDENTITY_CHANGED` | 原物体变成另一个物体或身份发生切换 |
 | `ABNORMAL_DEFORMATION` | 物体发生明显不合理形变 |
-| `MOTION_JUMP` | 位置或姿态发生明显跳变 / 瞬移 |
-| `MOTION_FREEZE` | 本应运动的物体异常冻结 |
-| `MOTION_DISCONTINUITY` | 前后运动或轨迹明显不连续 |
+| `MOTION_JUMP` | 位置或姿态突然跳变、瞬移 |
+| `MOTION_FREEZE` | 应运动的物体异常冻结 |
+| `MOTION_DISCONTINUITY` | 前后轨迹或运动状态明显不连续 |
 
-同一视频允许存在多个异常事件。
+同一视频允许包含多个异常。
 
-## 7. Metadata 与 Evaluation Object
+对于 **Cosmos 2.5** 生成的视频，需要从中筛选存在上述缺陷的视频，用于后续标注和训练。
 
-每条视频必须记录 `video_id`、`source`、`task_description`、`task_difficulty`、`fps`、`duration`、`resolution`。`task_description` 必须描述真实任务，例如 `Move the yellow cup from the table into the bowl.`，不能只写 `cup`；它用于确定 **Evaluation Object Set**。
+数据处理和标注所需算法程序统一放在项目 GitHub 仓库中。
 
-在三条曲线标注之前必须确认 Evaluation Object，其状态为 `TARGET_CORRECT`、`TARGET_WRONG` 或 `TARGET_UNCERTAIN`。若为 `TARGET_WRONG`，不能直接生成 Ground Truth，必须先修正评价对象。
+---
 
-## 8. Video-level state 与 event annotation
+## 6. 每条视频需要记录的基本信息
 
-每条视频标为 `NORMAL`、`ABNORMAL` 或 `UNCERTAIN`，但 **Video-level label != curve label**。禁止将 NORMAL 自动设为全部曲线 1，或因 ABNORMAL 强制所有曲线下降；Normal 视频也允许 local minor fluctuations。
+采集人员必须同时记录：
 
-每个异常事件记录：`object`、`event_type`、`start_time`、`peak_time`、`recovery_time`、`severity`、`confidence`、`note`。
+video_id
+source
+task_description
+task_difficulty
+fps
+duration
+resolution
 
-- **Start**：异常或明显状态变化开始；
-- **Peak**：异常最严重位置；
-- **Recovery**：重新恢复稳定 / 正常的位置。
+其中 `task_description` 必须描述机器人实际执行的任务。
 
-全程正常时标注 `Normal throughout`，分数 approximately 1.0；不要为了填表人为制造 Start / Peak / Recovery。
+例如：
 
-## 9. 三条曲线评分
+Move the yellow cup from the table into the bowl.
 
-所有曲线采用 0–1 continuous score。
+不能只写：
 
-| Score | Meaning |
-|---:|---|
-| 1.0 | Normal |
-| 0.8 | Minor anomaly |
-| 0.5 | Clear anomaly |
-| 0.2 | Severe anomaly |
-| 0.0 | Complete failure |
+cup
 
-允许连续值，例如 0.92、0.73、0.45、0.15。
+任务文本后续用于确定需要评价的任务相关物体。
 
-### Object Existence
+---
 
-Object Existence 表示任务过程中物体是否仍合理存在；**Visibility != Existence**。目标被 robot arm、gripper、container 或其他 foreground object 合理遮挡时，若由前后帧连续性、XMem、DINOv2 identity、Depth 与 robot interaction 能确认其仍存在，Existence approximately 1。即使 SAM3 mask missing 或 XMem tracking invalid，也不能自动设为 0；只有目标本应继续存在但真实异常消失时才降低，严重异常为 0–0.2。
+# 二、人工标注准则
 
-### Shape Normality
+## 7. 目标物体确认
 
-仅评价 Evaluation Object 自身几何状态。normal rotation、perspective change、partial occlusion、lighting change 不能自动降低该分数；robot arm / gripper 自身视觉畸变也不能直接导致 target Shape Normality 下降。
+标注三条曲线之前，首先确认 Evaluation Object 是否正确：
 
-1.0 为 geometrically normal，0.8 为 very minor abnormality，0.5 为 obvious unreasonable deformation，0.2 为 severe deformation，0.0 为 complete geometric failure。
+TARGET_CORRECT
+TARGET_WRONG
+TARGET_UNCERTAIN
 
-### Motion Smoothness
+如果目标错误，不能直接继续标注三条曲线，应先重新确定正确的评价对象。
 
-评价物体运动是否连续、合理且符合物理过程。1.0 为 continuous / physically reasonable，0.8 为 minor jitter，0.5 为 clear discontinuity，0.2 为 severe teleportation / trajectory break，0.0 为 complete discontinuity。
+---
 
-grasp acceleration、grasp deceleration、normal rotation、small contact vibration 与 robot 驱动的正常方向变化不能自动判异常。
+## 8. 视频级状态标注
 
-### 合理遮挡与初始不存在
+每条视频首先标记整体状态：
 
-目标暂时不可见时，若由前后帧连续性、XMem、DINOv2 identity、Depth 与 robot interaction 判断仍存在，Existence 保持高值；mask temporarily missing 不能直接导致 Existence = 0。
+NORMAL
+ABNORMAL
+UNCERTAIN
 
-若目标在开始阶段物理上确实未进入当前任务场景而非被遮挡，则 `Existence = 0`、`Shape = 0`、`Motion = 1`（neutral value）。之后合理进入场景时按真实过程恢复；若突然凭空出现，Motion 降低并标 `UNREASONABLE_REAPPEARANCE`。
+但**视频级标签不能反向决定三条曲线**。
 
-## 10. 多物体与控制点
+禁止直接按照：
 
-多物体 Evaluation Object Set 必须分别标注每个对象的三条曲线。系统总体曲线采用：
+NORMAL → 三条曲线全部等于 1
+ABNORMAL → 强制降低曲线
 
-```text
-Object Existence(t) = min(object_i existence(t))
-Shape Normality(t)  = min(object_i shape(t))
-Motion Smoothness(t)= min(object_i motion(t))
-```
+三条曲线必须根据视频中实际发生的物理过程进行判断。
 
-原因是任意关键物体的严重异常不能被其他正常物体平均掉。
+因此，即使整体属于 Normal 视频，也允许存在局部轻微波动。
 
-人工不需要逐帧绘制完整曲线，主要标 Start、Peak、Recovery，必要时添加 Point 1、Point 2、Point 3 等控制点；变化剧烈区域增加控制点。系统据此生成逐帧曲线初稿，最终完整曲线必须人工检查。
+---
 
-## 11. Evidence != Ground Truth
+## 9. 异常事件标注
 
-> SAM3、XMem、DINOv2、Depth、SEA-RAFT、CoTracker、RoboEngine 输出全部属于 **Evidence**，而不是 **Ground Truth**。
+对于每个异常事件，记录：
 
-例如，SAM3 detection failure 不能推出 Object Existence = 0；XMem drift 不能推出真实物体发生 motion anomaly。若 evidence 明显错误，标记 `EVIDENCE_UNRELIABLE`。最终 GT 根据原始视频中的真实物理状态判断。
+object
+event_type
+start_time
+peak_time
+recovery_time
+severity
+confidence
+note
 
-当前代码如何由 evidence 生成 / 处理曲线见 [CURVE_GENERATION.md](CURVE_GENERATION.md)；本文定义的是 **Human GT 如何标注**，两者必须区分。
+### Start
 
-## 12. 数据处理 pipeline
+异常或明显状态变化开始的时间。
 
-```text
-Raw Video + Task Description
-              │
-              ▼
-    Evaluation Object Selection
-              │
-              ▼
- RoboEngine / SAM3 Target Evidence
-              │
-              ▼
-           XMem Temporal Tracking
-              │
-        ┌─────┴─────┐
-        ▼           ▼
- DINOv2 Identity   Depth Occlusion
-        │           │
-        └─────┬─────┘
-              ▼
-     SEA-RAFT Motion Evidence
-              │
-              ▼
-      Multimodal Evidence
-              │
-              ▼
-       Human Annotation
-              │
-              ▼
- Object Existence / Shape Normality / Motion Smoothness
-              │
-              ▼
-              GT
-```
+### Peak
 
-## 13. 数据验收与核心原则
+异常最严重的时间。
 
-一条视频只有满足以下全部条件才算完成：Raw video exists；Task description confirmed；Evaluation Object Set confirmed；SAM3 / RoboEngine anchor manually checked；tracking / evidence generated；video-level label completed；abnormal events annotated；three-curve keypoints annotated；frame-level GT generated；final curves manually reviewed。
+### Recovery
 
-> 标注的是任务相关物体真实的物理状态，而不是 SAM3、XMem、RoboEngine 或其它模型的检测结果。
+重新恢复稳定或正常状态的时间。
 
-> The annotation target is the true physical state of the task-relevant objects, not the output of SAM3, XMem, RoboEngine, or any other perception model.
+如果全程正常，可直接记录：
+
+Normal throughout
+Score ≈ 1.0
+
+不要为了填写表格人为制造 Start / Peak / Recovery。
+
+---
+
+## 10. 三条曲线统一评分标准
+
+三条曲线统一使用 **0～1** 的连续评分。
+
+| Score含义 | |
+| ------- | ---- |
+| 1.0 | 正常 |
+| 0.8 | 轻微异常 |
+| 0.5 | 明显异常 |
+| 0.2 | 严重异常 |
+| 0.0 | 完全失效 |
+
+允许填写任意 0～1 之间的连续值，例如：
+
+0.92
+0.73
+0.45
+0.15
+
+---
+
+## 11. Object Existence 标注
+
+Object Existence 评价：
+
+> 当前任务过程中，该物体是否仍然合理存在。
+
+**不能简单按照“是否看见物体”进行评分。**
+
+当目标被机械臂、夹爪或容器遮挡时，如果根据前后时序能够确认目标仍然存在：
+
+Existence ≈ 1
+
+即使出现：
+
+SAM3 mask = missing
+tracking_valid = 0
+
+也不能直接认为：
+
+Existence = 0
+
+如果物体本应继续存在，却发生真正的异常消失，则：
+
+Existence ↓
+
+严重情况下可降低到：
+
+0 ～ 0.2
+
+---
+
+## 12. Shape Normality 标注
+
+Shape Normality 只评价：
+
+> Evaluation Object 自身的几何形状是否正常。
+
+以下情况不能自动认为 Shape 异常：
+
+- 正常旋转；
+- 透视变化；
+- 部分遮挡；
+- 光照变化。
+
+参考评分：
+
+1.0 = 几何正常
+0.8 = 很轻微变化
+0.5 = 明显不合理形变
+0.2 = 严重形变
+0.0 = 几何完全失真
+
+机械臂或夹爪自身发生视觉畸变，**不能因此降低目标物体的 Shape Normality**。
+
+---
+
+## 13. Motion Smoothness 标注
+
+Motion Smoothness 评价：
+
+> 物体在时间上的运动是否连续、合理，并符合正常物理过程。
+
+参考评分：
+
+1.0 = 连续合理
+0.8 = 轻微抖动
+0.5 = 明显跳变
+0.2 = 严重瞬移 / 轨迹断裂
+0.0 = 完全不连续
+
+以下情况属于正常机器人操作过程，不能自动认为 Motion 异常：
+
+- 抓取时加速；
+- 抓取时减速；
+- 正常旋转；
+- 接触产生的小幅震动；
+- 机械臂带动物体正常改变方向。
+
+---
+
+## 14. 特殊情况处理
+
+### 合理遮挡
+
+目标虽然暂时不可见，但如果根据：
+
+前后帧连续性
+XMem
+DINOv2 identity
+depth
+robot interaction
+
+能够判断目标仍然存在，则：
+
+Existence 保持高值
+
+不能因为 mask 暂时消失就直接降低到 0。
+
+### 目标初始不存在
+
+如果任务核心物体在视频开始阶段**物理上确实还没有进入当前任务场景**，而不是单纯被遮挡：
+
+Existence = 0
+Shape = 0
+Motion = 1
+
+其中 Motion 使用 1 作为 neutral value。
+
+如果物体之后以合理方式进入场景，则按照实际过程恢复。
+
+如果物体突然凭空出现，应在出现附近：
+
+Motion ↓
+
+并标记：
+
+UNREASONABLE_REAPPEARANCE
+
+---
+
+## 15. 多物体任务
+
+如果 Evaluation Object Set 中包含多个关键物体，则**每个物体分别标注三条曲线**。
+
+例如：
+
+cup:
+existence(t)
+shape(t)
+motion(t)
+
+bowl:
+existence(t)
+shape(t)
+motion(t)
+
+系统最终自动生成整体三条曲线：
+
+Object Existence(t) = 所有关键物体中的最低值
+Shape Normality(t)  = 所有关键物体中的最低值
+Motion Smoothness(t)= 所有关键物体中的最低值
+
+这样可以保证某一个关键物体发生严重异常时，不会被其它正常物体的高分平均掉。
+
+---
+
+## 16. 曲线关键点标注
+
+不要求人工逐帧绘制完整曲线。
+
+人工主要标注：
+
+Start
+Peak
+Recovery
+额外必要控制点
+
+如果异常过程比较复杂，可以增加：
+
+Point 1
+Point 2
+Point 3
+...
+
+系统根据关键点生成逐帧曲线初稿。
+
+对于状态变化剧烈的区域，应增加必要的控制点，不能完全依赖自动插值。
+
+生成完整曲线后，由人工进行最终检查。
+
+---
+
+## 17. Evidence 与人工 GT 的关系
+
+SAM3、XMem、DINOv2、Depth、SEA-RAFT 等模型输出全部属于：
+
+Evidence
+
+而不是：
+
+Ground Truth
+
+因此：
+
+SAM3 检测失败
+
+不能直接推出：
+
+Object Existence = 0
+
+同样：
+
+XMem tracking drift
+
+本身也不代表真实物体发生了物理异常。
+
+如果 evidence 明显错误，应标记：
+
+EVIDENCE_UNRELIABLE
+
+最终 Ground Truth 仍根据原始视频中的真实物理状态进行判断。
+
+---
+
+## 18. 最终数据验收要求
+
+一条视频只有同时满足以下条件，才视为完成标注：
+
+原视频存在
+任务文本明确
+Evaluation Object Set 已确认
+SAM3 anchor 已人工检查
+tracking / evidence 已生成
+视频级标签已填写
+异常事件已填写
+三条曲线关键点已填写
+逐帧 GT 已生成
+最终曲线已经人工复核
+
+### 核心原则
+
+> **标注的是任务相关物体真实的物理状态，而不是 SAM3、XMem 或其它模型的检测结果。**
