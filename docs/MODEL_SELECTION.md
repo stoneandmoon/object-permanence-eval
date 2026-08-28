@@ -12,6 +12,8 @@
 
 The released `generate_three_curves.py` is evidence-only: it requires none of these weights once a valid CSV exists.
 
+All perception-model outputs are treated as evidence. They do not directly define annotation Ground Truth.
+
 RoboEngine's robot model `michaelyuanqwq/roboengine-sam` is required only for a separately enabled robot/gripper branch, not for the primary RoboEngine → XMem pipeline.
 
 DINOv2 is implemented in the original project as masked target-crop identity evidence (`dinov2_vits14`). The current packaged curve equation consumes the existing `identity_similarity` field but does not load DINOv2 itself. CoTracker is similarly auxiliary rather than a required curve model.

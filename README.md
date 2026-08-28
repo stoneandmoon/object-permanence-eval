@@ -27,6 +27,29 @@ Video + Task + Target ── RoboEngine ── Initial Target Mask ── XMem
 
 Recommended data order: real robot videos, Image2World variants, Video2World counterfactual/abnormal variants, then Text2World supplementary samples.
 
+## Dataset Collection and Annotation
+
+The planned dataset contains 600 robot-manipulation videos: 300 Normal, 300 Abnormal, with at least 60% real-world robot videos. The annotation targets are Object Existence, Shape Normality, and Motion Smoothness. Model outputs are evidence, not Ground Truth.
+
+```text
+Dataset Sources
+
+Real Robot Videos ──── Direct Use ───────────────┐
+       │                                          │
+       └── Cosmos-Predict2.5 Generated Variants ─┘
+                          │
+                          ▼
+                   Human Annotation
+                          │
+                          ▼
+                 Multimodal Evidence
+                          │
+                          ▼
+                Three Curve Ground Truth
+```
+
+Cosmos-Predict2.5 generated data also requires human review. See the complete [dataset collection and annotation guidelines](docs/DATA_ANNOTATION_GUIDELINES.md).
+
 ## Tracking setup
 
 The RoboEngine → XMem pipeline was validated on Ubuntu 22.04, Python 3.10.20, PyTorch 2.5.1+cu124, CUDA 12.4, and an NVIDIA RTX 3090 (24 GB). This is not a Cosmos-Predict2.5 environment specification.
