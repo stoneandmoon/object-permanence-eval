@@ -1,6 +1,6 @@
-# Three Core Curves
+# Three Core Curves (V2)
 
-The release preserves the current multimodal curve equations from `resume_wan_scene16_multi_object_three_curves.py`. The public entry consumes the resulting `per_instance_frame_evidence.csv`; it does not rerun XMem, Video Depth Anything, or SEA-RAFT.
+The default public entry uses the temporally robust V2 formulation. It consumes existing `per_instance_frame_evidence.csv`; it does not rerun XMem, Video Depth Anything, SEA-RAFT, or any segmentation model.
 
 ```bash
 python scripts/generate_three_curves.py \
@@ -17,14 +17,16 @@ python scripts/generate_three_curves.py \
 
 The output is `object_existence_curve.csv`, `shape_normality_curve.csv`, `motion_smoothness_curve.csv`, `three_curves.csv`, `per_instance_three_curves.csv`, and `three_curves.png`.
 
+The V2 pipeline is: multimodal frame evidence → reliability gating → 5-frame rolling median/MAD → multi-evidence agreement → 3-frame persistence confirmation (with an extreme-event exception) → hysteresis → asymmetric attack/recovery → continuous curves. There is no large post-smoothing window and no label/file-name input.
+
 ## Object Existence Curve
 
-This is target existence conditional on actual observation: `0.50 * tracking_confidence + 0.30 * identity_similarity + 0.20 * depth_valid_ratio`. It is emitted only for a non-empty tracked mask. A missing tracked mask is `NaN`, not an abnormal-disappearance assertion. Thus the curve distinguishes currently visible evidence from evidence-unavailable frames; occlusion versus disappearance remains an evidence/annotation decision, not a mask-nonempty shortcut.
+Object Existence combines tracking, identity, depth/occlusion and temporal continuity. A temporary segmentation/tracking failure is not treated as physical disappearance. A substantial decrease requires reliable, temporally persistent agreement from multiple evidence sources.
 
 ## Shape Normality Curve
 
-Shape Normality Curve is the current normalized shape-consistency / deformation evidence. It combines object-mask area stability against the median of the first 20 visible masks, aspect-ratio stability, contour compactness, and previous-mask IoU. It remains unavailable when shape is not observable. Rotation, perspective change, partial occlusion, and ordinary flexible deformation can reduce individual terms without automatically becoming abnormal; collapse, expansion, fragmentation, or implausible deformation require review with the evidence.
+Shape is measured relative to the target's own reliable early reference using robust area, aspect-ratio and compactness deviations. Reliability/occlusion gates and multi-feature persistence prevent short occlusions, perspective changes, or a low adjacent-mask IoU from becoming a direct deformation score.
 
 ## Motion Smoothness Curve
 
-The current formula combines previous-mask IoU, centroid-velocity acceleration, trajectory residual, and SEA-RAFT target-mask flow after camera-motion compensation. It remains unavailable when the target is not observable. Grasping, lifting, moving, placing, and rotation can be smooth. A teleportation-like jump, discontinuous trajectory, or implausible velocity change lowers the evidence score and should be reviewed with the tracking and flow data.
+Motion uses a robust target trajectory plus optical-flow and trajectory-residual evidence. Jump/discontinuity evidence requires agreement and persistence; noisy instantaneous acceleration and previous-mask IoU are not direct strong penalties.

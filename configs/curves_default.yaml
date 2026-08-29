@@ -18,5 +18,14 @@ models:
     repo_path: null
     checkpoint: null
 curves:
+  version: v2
+  robust_window_frames: 5
+  persistence_frames: 3
+  hysteresis_enter: 0.55
+  hysteresis_exit: 0.30
+  attack_alpha: 0.35
+  recovery_alpha: 0.10
+  large_post_smoothing: false
+  label_leakage: false
   group_aggregation: mean_available_instance_evidence
-  tracking_failure_policy: unavailable_nan
+  tracking_failure_policy: reliability_gated_temporal_hold

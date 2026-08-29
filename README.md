@@ -88,7 +88,7 @@ NVIDIA Cosmos-Predict2.5 supports Text2World, Image2World, and Video2World. For 
 
 ## Object Permanence Curves
 
-The tracking/evidence pipeline outputs three core temporal curves: Object Existence (current target evidence), Shape Normality (normalized shape-consistency/deformation evidence), and Motion Smoothness (temporal motion continuity). See [curve generation](docs/CURVE_GENERATION.md) for the exact current evidence contract and formulas.
+The default curve generator uses the temporally robust V2 formulation. It maps per-frame multimodal evidence (tracking/masks, DINOv2 identity, relative depth/occlusion, SEA-RAFT/trajectory, and shape geometry) through reliability gating, 5-frame robust statistics, multi-evidence agreement, persistence confirmation, hysteresis, and asymmetric attack/recovery into continuous `[0,1]` curves. Temporary tracking failures do not directly imply physical disappearance or deformation. See [curve generation](docs/CURVE_GENERATION.md) for the evidence contract.
 
 ## Curve Generation
 
