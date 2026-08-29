@@ -19,15 +19,17 @@
 
 ## 2. 视频数量
 
-正式数据集目标为 **600 条视频**。
+正式数据集目标为 **1000 条视频**。
 
-| 数据类型数量 | |
-| -------- | ------- |
-| Normal | 300 |
-| Abnormal | 300 |
-| **总计** | **600** |
+| **数据类型** |  **数量**  |
+| :------: | :------: |
+|  Normal  |    500   |
+| Abnormal |    700   |
+|  **总计**  | **1000** |
 
 现有项目中的视频可作为内部规则验证和标注示例，新采集数据尽量不要与现有视频重复。
+
+normal视频只需要提取证据不需要标注曲线，只需要人工判断证据提取是否正常
 
 ### 数据来源
 
@@ -48,6 +50,8 @@
 
 **禁止通过剪辑、P 图、删除帧等方式人工制造异常。**
 
+视频类型要多样（单臂、多臂等）
+
 异常应来自真实机器人执行失败，或世界模型自身生成的视频异常。
 
 ---
@@ -58,11 +62,11 @@
 
 建议比例：
 
-| 难度数量定义 | | |
-| ------ | --- | -------------------- |
-| T1 简单 | 180 | 单物体、单阶段操作 |
-| T2 中等 | 240 | 两到三个操作阶段，或涉及一个关键交互物体 |
-| T3 复杂 | 180 | 多物体、多阶段或复杂物理关系 |
+| **难度** | **数量** |        **定义**        |
+| :----: | :----: | :------------------: |
+|  T1 简单 |   180  |       单物体、单阶段操作      |
+|  T2 中等 |   240  | 两到三个操作阶段，或涉及一个关键交互物体 |
+|  T3 复杂 |   180  |    多物体、多阶段或复杂物理关系    |
 
 ### T1 简单任务
 
@@ -123,15 +127,15 @@
 
 Abnormal 数据重点覆盖以下异常：
 
-| 类型定义 | |
-| --------------------------- | ----------------- |
-| `ABNORMAL_DISAPPEARANCE` | 本应继续存在的物体突然消失 |
-| `UNREASONABLE_REAPPEARANCE` | 物体以不符合前后状态的方式重新出现 |
-| `IDENTITY_CHANGED` | 原物体变成另一个物体或身份发生切换 |
-| `ABNORMAL_DEFORMATION` | 物体发生明显不合理形变 |
-| `MOTION_JUMP` | 位置或姿态突然跳变、瞬移 |
-| `MOTION_FREEZE` | 应运动的物体异常冻结 |
-| `MOTION_DISCONTINUITY` | 前后轨迹或运动状态明显不连续 |
+|           **类型**           |       **定义**      |
+| :------------------------: | :---------------: |
+|   ABNORMAL\_DISAPPEARANCE  |   本应继续存在的物体突然消失   |
+| UNREASONABLE\_REAPPEARANCE | 物体以不符合前后状态的方式重新出现 |
+|      IDENTITY\_CHANGED     | 原物体变成另一个物体或身份发生切换 |
+|    ABNORMAL\_DEFORMATION   |    物体发生明显不合理形变    |
+|        MOTION\_JUMP        |    位置或姿态突然跳变、瞬移   |
+|       MOTION\_FREEZE       |     应运动的物体异常冻结    |
+|    MOTION\_DISCONTINUITY   |   前后轨迹或运动状态明显不连续  |
 
 同一视频允许包含多个异常。
 
@@ -145,6 +149,7 @@ Abnormal 数据重点覆盖以下异常：
 
 采集人员必须同时记录：
 
+```Plain
 video_id
 source
 task_description
@@ -152,16 +157,21 @@ task_difficulty
 fps
 duration
 resolution
+```
 
 其中 `task_description` 必须描述机器人实际执行的任务。
 
 例如：
 
+```Plain
 Move the yellow cup from the table into the bowl.
+```
 
 不能只写：
 
+```Plain
 cup
+```
 
 任务文本后续用于确定需要评价的任务相关物体。
 
@@ -173,9 +183,11 @@ cup
 
 标注三条曲线之前，首先确认 Evaluation Object 是否正确：
 
+```Plain
 TARGET_CORRECT
 TARGET_WRONG
 TARGET_UNCERTAIN
+```
 
 如果目标错误，不能直接继续标注三条曲线，应先重新确定正确的评价对象。
 
@@ -185,16 +197,20 @@ TARGET_UNCERTAIN
 
 每条视频首先标记整体状态：
 
+```Plain
 NORMAL
 ABNORMAL
 UNCERTAIN
+```
 
 但**视频级标签不能反向决定三条曲线**。
 
 禁止直接按照：
 
+```Plain
 NORMAL → 三条曲线全部等于 1
 ABNORMAL → 强制降低曲线
+```
 
 三条曲线必须根据视频中实际发生的物理过程进行判断。
 
@@ -206,6 +222,7 @@ ABNORMAL → 强制降低曲线
 
 对于每个异常事件，记录：
 
+```Plain
 object
 event_type
 start_time
@@ -214,6 +231,7 @@ recovery_time
 severity
 confidence
 note
+```
 
 ### Start
 
@@ -229,8 +247,10 @@ note
 
 如果全程正常，可直接记录：
 
+```Plain
 Normal throughout
 Score ≈ 1.0
+```
 
 不要为了填写表格人为制造 Start / Peak / Recovery。
 
@@ -240,20 +260,22 @@ Score ≈ 1.0
 
 三条曲线统一使用 **0～1** 的连续评分。
 
-| Score含义 | |
-| ------- | ---- |
-| 1.0 | 正常 |
-| 0.8 | 轻微异常 |
-| 0.5 | 明显异常 |
-| 0.2 | 严重异常 |
-| 0.0 | 完全失效 |
+| **Score** | **含义** |
+| --------- | ------ |
+| 1         | 正常     |
+| 0.8       | 轻微异常   |
+| 0.5       | 明显异常   |
+| 0.2       | 严重异常   |
+| 0         | 完全失效   |
 
 允许填写任意 0～1 之间的连续值，例如：
 
+```Plain
 0.92
 0.73
 0.45
 0.15
+```
 
 ---
 
@@ -267,24 +289,34 @@ Object Existence 评价：
 
 当目标被机械臂、夹爪或容器遮挡时，如果根据前后时序能够确认目标仍然存在：
 
+```Plain
 Existence ≈ 1
+```
 
 即使出现：
 
+```Plain
 SAM3 mask = missing
 tracking_valid = 0
+```
 
 也不能直接认为：
 
+```Plain
 Existence = 0
+```
 
 如果物体本应继续存在，却发生真正的异常消失，则：
 
+```Plain
 Existence ↓
+```
 
 严重情况下可降低到：
 
+```Plain
 0 ～ 0.2
+```
 
 ---
 
@@ -303,11 +335,13 @@ Shape Normality 只评价：
 
 参考评分：
 
+```Plain
 1.0 = 几何正常
 0.8 = 很轻微变化
 0.5 = 明显不合理形变
 0.2 = 严重形变
 0.0 = 几何完全失真
+```
 
 机械臂或夹爪自身发生视觉畸变，**不能因此降低目标物体的 Shape Normality**。
 
@@ -321,11 +355,13 @@ Motion Smoothness 评价：
 
 参考评分：
 
+```Plain
 1.0 = 连续合理
 0.8 = 轻微抖动
 0.5 = 明显跳变
 0.2 = 严重瞬移 / 轨迹断裂
 0.0 = 完全不连续
+```
 
 以下情况属于正常机器人操作过程，不能自动认为 Motion 异常：
 
@@ -343,15 +379,19 @@ Motion Smoothness 评价：
 
 目标虽然暂时不可见，但如果根据：
 
+```Plain
 前后帧连续性
 XMem
 DINOv2 identity
 depth
 robot interaction
+```
 
 能够判断目标仍然存在，则：
 
+```Plain
 Existence 保持高值
+```
 
 不能因为 mask 暂时消失就直接降低到 0。
 
@@ -359,9 +399,11 @@ Existence 保持高值
 
 如果任务核心物体在视频开始阶段**物理上确实还没有进入当前任务场景**，而不是单纯被遮挡：
 
+```Plain
 Existence = 0
 Shape = 0
 Motion = 1
+```
 
 其中 Motion 使用 1 作为 neutral value。
 
@@ -369,11 +411,15 @@ Motion = 1
 
 如果物体突然凭空出现，应在出现附近：
 
+```Plain
 Motion ↓
+```
 
 并标记：
 
+```Plain
 UNREASONABLE_REAPPEARANCE
+```
 
 ---
 
@@ -383,6 +429,7 @@ UNREASONABLE_REAPPEARANCE
 
 例如：
 
+```Plain
 cup:
 existence(t)
 shape(t)
@@ -392,12 +439,15 @@ bowl:
 existence(t)
 shape(t)
 motion(t)
+```
 
 系统最终自动生成整体三条曲线：
 
+```Plain
 Object Existence(t) = 所有关键物体中的最低值
 Shape Normality(t)  = 所有关键物体中的最低值
 Motion Smoothness(t)= 所有关键物体中的最低值
+```
 
 这样可以保证某一个关键物体发生严重异常时，不会被其它正常物体的高分平均掉。
 
@@ -409,17 +459,21 @@ Motion Smoothness(t)= 所有关键物体中的最低值
 
 人工主要标注：
 
+```Plain
 Start
 Peak
 Recovery
 额外必要控制点
+```
 
 如果异常过程比较复杂，可以增加：
 
+```Plain
 Point 1
 Point 2
 Point 3
 ...
+```
 
 系统根据关键点生成逐帧曲线初稿。
 
@@ -433,29 +487,41 @@ Point 3
 
 SAM3、XMem、DINOv2、Depth、SEA-RAFT 等模型输出全部属于：
 
+```Plain
 Evidence
+```
 
 而不是：
 
+```Plain
 Ground Truth
+```
 
 因此：
 
+```Plain
 SAM3 检测失败
+```
 
 不能直接推出：
 
+```Plain
 Object Existence = 0
+```
 
 同样：
 
+```Plain
 XMem tracking drift
+```
 
 本身也不代表真实物体发生了物理异常。
 
 如果 evidence 明显错误，应标记：
 
+```Plain
 EVIDENCE_UNRELIABLE
+```
 
 最终 Ground Truth 仍根据原始视频中的真实物理状态进行判断。
 
@@ -465,6 +531,7 @@ EVIDENCE_UNRELIABLE
 
 一条视频只有同时满足以下条件，才视为完成标注：
 
+```Plain
 原视频存在
 任务文本明确
 Evaluation Object Set 已确认
@@ -475,6 +542,7 @@ tracking / evidence 已生成
 三条曲线关键点已填写
 逐帧 GT 已生成
 最终曲线已经人工复核
+```
 
 ### 核心原则
 
